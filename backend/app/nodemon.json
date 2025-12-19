@@ -1,0 +1,7 @@
+{
+  "verbose": true,
+  "ignore": [],
+  "watch": ["src", "shared"],
+  "ext": "ts,json",
+  "exec": "node --trace-warnings --trace-uncaught --loader ts-node/esm src/server.ts"
+}

@@ -11,8 +11,27 @@ services:
       - ./shared:/app/shared
       # - ./uploads:/uploads
       - /app/node_modules
+    depends_on:
+      - backend
     networks:
       - net
+
+    backend:
+      build: ./backend
+      container_name: backend
+      ports:
+        - "3001:3001"
+      environment:
+        - NODE_ENV=development
+        - FRONTEND_HOST=${FRONTEND_HOST_DEV}
+      volumes:
+        - ./backend/app:/app
+        - ./backend/db:/db
+        - ./shared:/app/shared
+        # - ./uploads:/uploads
+        - /app/node_modules
+      networks:
+        - net
 
 networks:
   net:
