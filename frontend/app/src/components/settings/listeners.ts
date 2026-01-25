@@ -225,6 +225,145 @@ async function setPassword(e: Event) {
 
 
 
+type PrivacyAction = 'anonymize' | 'delete';
+
+function openPrivacyConfirm(action: PrivacyAction) {
+	const overlay = document.getElementById('privacy-confirm-overlay')!;
+	const title = document.getElementById('privacy-confirm-title')!;
+	const message = document.getElementById('privacy-confirm-message')!;
+	const warning = document.getElementById('privacy-confirm-warning')!;
+	const confirmBtn = document.getElementById('privacy-confirm-validate')!;
+
+	if (action === 'anonymize') {
+		title.textContent = 'Anonymize account';
+		message.textContent =
+			'All personal identifiers will be removed. Your game stats will remain.';
+		
+		confirmBtn.classList.remove('bg-red-600');
+		confirmBtn.classList.add('bg-[var(--color-primary)]');
+	}
+	else {
+		title.textContent = 'Delete account';
+		message.textContent =
+			'Your account and all personal data will be permanently deleted.';
+		confirmBtn.classList.remove('bg-[var(--color-primary)]');
+		confirmBtn.classList.add('bg-red-600');
+	}
+
+	warning.classList.remove('hidden');
+	overlay.classList.remove('hidden');
+	overlay.classList.add('flex');
+}
+
+function closePrivacyConfirm() {
+	const overlay = document.getElementById('privacy-confirm-overlay')!;
+	overlay.classList.add('hidden');
+	overlay.classList.remove('flex');
+}
+
+let onPrivacyConfirmClick: ((e: Event) => void) | null = null;
+let onPrivacyCancelClick: ((e: Event) => void) | null = null;
+
+async function openConfirmAnonymizeData() {
+
+	openPrivacyConfirm('anonymize');
+
+	const confirmBtn = document.getElementById('privacy-confirm-validate');
+	const cancelBtn = document.getElementById('privacy-confirm-cancel');
+
+	if (onPrivacyConfirmClick)
+		confirmBtn?.removeEventListener('click', onPrivacyConfirmClick);
+	onPrivacyConfirmClick = anonymizeData;
+	confirmBtn?.addEventListener('click', onPrivacyConfirmClick);
+
+	if (onPrivacyCancelClick)
+		cancelBtn?.removeEventListener('click', onPrivacyCancelClick);
+	onPrivacyCancelClick = closePrivacyConfirm;
+	cancelBtn?.addEventListener('click', onPrivacyCancelClick);
+
+}
+
+async function anonymizeData() {
+	try {
+		await usersService.anonymizeData();
+		closePrivacyConfirm();
+
+		const socketGame = getSocketUser();
+		socketGame?.send(JSON.stringify({
+			type: "anonymize",
+		}));
+
+		const response = await authService.logout();
+		if (response.success) {
+			authStore.setState('anon');
+			navigateTo('login');
+		}
+	}
+	catch (error) {
+		catchHttpError('', error);
+		showNotification("Internal server error", 'error');
+	}
+}
+
+async function openConfirmDeleteData() {
+
+	openPrivacyConfirm('delete');
+
+	const confirmBtn = document.getElementById('privacy-confirm-validate');
+	const cancelBtn = document.getElementById('privacy-confirm-cancel');
+
+	if (onPrivacyConfirmClick)
+		confirmBtn?.removeEventListener('click', onPrivacyConfirmClick);
+	onPrivacyConfirmClick = deleteData;
+	confirmBtn?.addEventListener('click', onPrivacyConfirmClick);
+
+	if (onPrivacyCancelClick)
+		cancelBtn?.removeEventListener('click', onPrivacyCancelClick);
+	onPrivacyCancelClick = closePrivacyConfirm;
+	cancelBtn?.addEventListener('click', onPrivacyCancelClick);
+
+}
+
+async function deleteData() {
+	try {
+		const socketGame = getSocketUser();
+		socketGame?.send(JSON.stringify({
+			type: "delete",
+		}));
+		await usersService.deleteData();
+		closePrivacyConfirm();
+
+		authStore.setState('anon');
+		navigateTo('login');
+	}
+	catch (error) {
+		catchHttpError('', error);
+		showNotification("Internal server error", 'error');
+	}
+}
+
+function downloadJSON(data: any, filename: string) {
+	const dataStr = JSON.stringify(data, null, 2);
+	const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
+	var downloadNode = document.createElement('a');
+	downloadNode.setAttribute("href", jsonStr);
+	downloadNode.setAttribute("download", filename);
+	document.body.appendChild(downloadNode);
+	downloadNode.click();
+	downloadNode.remove();
+}
+
+async function requestData() {
+	try {
+		const data = await usersService.requestData();
+		downloadJSON(data, 'request_data.json');
+	}
+	catch (error) {
+		catchHttpError('', error);
+		showNotification("Internal server error", 'error');
+	}
+}
+
 
 let onUpdateEmailClick: ((e: Event) => void) | null = null;
 let onUpdatePasswordClick: ((e: Event) => void) | null = null;
@@ -235,6 +374,9 @@ let onLinkGoogleClick: ((e: Event) => void) | null = null;
 let onCreatePasswdClick: ((e: Event) => void) | null = null;
 let onSetNewPasswordCLick: ((e: Event) => void) | null = null;
 
+let onRequestCLick: ((e: Event) => void) | null = null;
+let onAnonymizeCLick: ((e: Event) => void) | null = null;
+let onDeleteCLick: ((e: Event) => void) | null = null;
 
 export function setupSettingsListeners() {
 	const updateEmailBtn = document.getElementById('update-email-btn');
@@ -288,4 +430,21 @@ export function setupSettingsListeners() {
 	createBtn?.addEventListener('click', onCreatePasswdClick);
 
 
+	const reqBtn = document.getElementById('request-data-btn');
+	if (onRequestCLick)
+		reqBtn?.removeEventListener('click', onRequestCLick);
+	onRequestCLick = requestData;
+	reqBtn?.addEventListener('click', onRequestCLick);
+
+	const anonBtn = document.getElementById('anonymize-account-btn');
+	if (onAnonymizeCLick)
+		anonBtn?.removeEventListener('click', onAnonymizeCLick);
+	onAnonymizeCLick = openConfirmAnonymizeData;
+	anonBtn?.addEventListener('click', onAnonymizeCLick);
+
+	const delBtn = document.getElementById('delete-account-btn');
+	if (onDeleteCLick)
+		delBtn?.removeEventListener('click', onDeleteCLick);
+	onDeleteCLick = openConfirmDeleteData;
+	delBtn?.addEventListener('click', onDeleteCLick);
 }

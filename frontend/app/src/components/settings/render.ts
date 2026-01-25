@@ -19,6 +19,7 @@ function renderCard(): string {
 				${renderCreatePasswordCTA()}
 				${renderTwoFASettings()}
 				${renderBlockedUsers()}
+				${renderPrivacySettings()}
 
 			</div>
 		</div>
@@ -208,6 +209,116 @@ function renderGoogleSettings(): string {
 				
 			</div>
 		</div>
+	`;
+}
+
+function renderPrivacySettings(): string {
+	return /*ts*/`
+	<div class="space-y-6">
+		<h4 class="text-lg font-semibold text-[var(--color-primary)] flex items-center gap-2">
+			Privacy
+		</h4>
+
+		<div class="space-y-1">
+			<div class="bg-[#1a0c24]/50 border border-[var(--color-primary)]/20 rounded-xl p-4 flex justify-between items-center">
+					<div class="flex flex-col min-w-0">
+						<h5 class="text-base font-semibold text-[var(--color-primary)] mb-1">
+							Request your data
+						</h5>
+						<p class="text-sm text-[#d4ced4] mb-1">
+							Get a copy of all personal data we store about you.
+						</p>
+					</div>
+					<div>
+						<button id="request-data-btn"
+							class="cursor-pointer px-4 py-1 text-sm whitespace-nowrap font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)]
+								text-[#0c0511] rounded-md hover:from-[var(--color-primary-light)] hover:to-[var(--color-primary)] transition-all duration-200">
+							Request
+						</button>
+					</div>
+			</div>
+
+			<div class="bg-[#1a0c24]/50 border border-[var(--color-primary)]/20 rounded-xl p-4 flex justify-between items-center">
+				<div class="flex flex-col min-w-0">
+					<h5 class="text-base font-semibold text-[var(--color-primary)] mb-1">
+						Anonymize account
+					</h5>
+					<p class="text-sm text-[#d4ced4] mb-1">
+						Remove all personal identifiers. Your stats will remain.
+					</p>
+					<p class="text-xs text-red-400 my-1">
+						This action is irreversible.
+					</p>
+				</div>
+				<div class="flex-shrink-0">
+					<button id="anonymize-account-btn"
+						class="cursor-pointer px-2 py-1 text-sm font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)]
+							text-[#0c0511] rounded-md hover:from-[var(--color-primary-light)] hover:to-[var(--color-primary)] transition-all duration-200">
+						Anonymize
+					</button>
+				</div>
+			</div>
+
+			<div class="bg-[#1a0c24]/50 border border-[var(--color-primary)]/20 rounded-xl p-4 flex justify-between items-center">
+				<div class="flex flex-col min-w-0">
+					<h5 class="text-base font-semibold text-[var(--color-primary)] mb-1">
+						Delete account
+					</h5>
+					<p class="text-sm text-[#d4ced4] mb-1">
+						Permanently delete your account and all associated personal data.
+					</p>
+					<p class="text-xs text-red-400 my-1">
+						This action is irreversible.
+					</p>
+				</div>
+				<div>
+					<button id="delete-account-btn"
+						class="cursor-pointer px-2 py-1 whitespace-nowrap text-sm font-bold bg-red-600 text-[#0c0511]
+							rounded-md hover:bg-red-500 transition-all duration-200">
+						Delete
+					</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div id="privacy-confirm-overlay"
+		class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+
+		<div class="bg-[#02010f] border-2 border-[var(--color-primary)]/40 rounded-2xl w-[90vw] max-w-md p-6 space-y-5">
+
+			<h3 id="privacy-confirm-title"
+				class="text-lg font-semibold text-[var(--color-primary)]">
+				Confirm action
+			</h3>
+
+			<p id="privacy-confirm-message"
+				class="text-sm text-[#d4ced4]">
+				Are you sure you want to proceed?
+			</p>
+
+			<p id="privacy-confirm-warning"
+				class="text-xs text-red-400 hidden">
+				This action is irreversible.
+			</p>
+
+			<div class="flex justify-end gap-3 pt-4">
+				<button id="privacy-confirm-cancel"
+					class="cursor-pointer px-4 py-1.5 text-sm rounded-md border border-[var(--color-primary)]/40
+					text-[#d4ced4] hover:bg-[var(--color-primary)]/10 transition">
+					Cancel
+				</button>
+
+				<button id="privacy-confirm-validate"
+					class="cursor-pointer px-4 py-1.5 text-sm font-bold rounded-md
+					bg-red-600 text-[#0c0511] hover:bg-red-500 transition">
+					Confirm
+				</button>
+			</div>
+
+		</div>
+	</div>
 	`;
 }
 
