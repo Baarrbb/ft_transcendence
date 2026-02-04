@@ -7,7 +7,7 @@ import { renderResetPassword, renderExpiredTokenError, setupResetListeners } fro
 import { renderTwoFactorAuthentification, setup2FAListeners } from './components/auth/twoFA.ts'
 import { renderDashboard, populateDashboard } from './components/dashboard/render.ts'
 import { renderFriends, populateFriends } from './components/friends/render.ts'
-import { renderCredits } from './components/credits/credits.ts'
+// import { renderCredits } from './components/credits/credits.ts'
 import { renderSettings, populateSettings } from './components/settings/render.ts'
 import { renderProfil, populateProfil } from './components/profil/render.ts'
 import { populateOneChat } from './components/chat/render.ts'
@@ -23,7 +23,7 @@ import { renderTournmt, setupListenersTournmt } from './components/home/tourname
 import { renderRegisterLocalTournament, setupListenersRegisterTournament }  from './components/home/tournament/localTournament/registerLocalTournament.ts';
 import { cleanupPongMatch } from './components/home/tournament/localTournament/playMatch.ts';
 import { renderLinkAccount, setupListenersLinkAccount } from './components/auth/oauth.ts';
-import { renderPrivacy } from './components/credits/privacy.ts';
+// import { renderPrivacy } from './components/credits/privacy.ts';
 
 
 export const viewManager = {
@@ -191,10 +191,12 @@ export const viewManager = {
 		setupListenersLinkAccount();
 	},
 
+	// ${renderPrivacy()}
+
 	showPrivacy(appEl: HTMLElement) {
 		appEl.innerHTML = /*ts*/`
 			<div class="flex items-center justify-center h-screen relative">
-				${renderPrivacy()}
+				
 			</div>
 		`;
 	},
@@ -255,8 +257,8 @@ export const viewManager = {
 						await populateChat()
 				}, 0);
 				return renderChat();
-			case 'credit':
-				return renderCredits();
+			// case 'credit':
+			// 	return renderCredits();
 			default:
 				setTimeout(() => setupListenersHome(), 0);
 				return renderHome();
