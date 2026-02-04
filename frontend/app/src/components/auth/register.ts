@@ -48,9 +48,14 @@ export function renderRegister(): string {
 				</div>
 				${renderRegisterButton()}
 			</form>
-			<p class="text-xs text-[#888] mt-4 text-center">
-				<a href="/privacy" class="underline hover:text-[var(--color-primary)] transition-colors">Privacy & Data</a>
-			</p>
+			<div class="flex flex-row justify-center">
+				<p class="text-xs text-[#888] mt-4 text-center">
+					<a href="/privacy" class="underline hover:text-[var(--color-primary)] transition-colors mx-1">Privacy & Data</a>
+				</p>
+				<p class="text-xs text-[#888] mt-4 text-center">
+					<a href="/terms" class="cursor-pointer underline hover:text-[var(--color-primary)] transition-colors mx-1">Terms & Services</a>
+				</p>
+			</div>
 		</div>
 	</div>
 	`
