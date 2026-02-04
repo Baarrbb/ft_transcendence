@@ -16,7 +16,7 @@ services:
     networks:
       - net
 
-    backend:
+  backend:
       build: ./backend
       container_name: backend
       ports:
