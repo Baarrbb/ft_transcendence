@@ -53,6 +53,7 @@ class App {
 		'double-authentification': (el) => viewManager.showTwoFA(el),
 		'link-account': (el) => viewManager.showLinkAccount(el),
 		'privacy': (el) => viewManager.showPrivacy(el),
+		'terms': (el) => viewManager.showTerms(el),
 		main: (el) => {
 			manageSocketUser('on');
 			viewManager.showApp(el, this.currentView, this.currentSubView);

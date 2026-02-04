@@ -30,6 +30,8 @@ export function authGuard(page: string, view?: string, subView?: string): boolea
 			return state !== 'auth';
 		case 'privacy':
 			return true;
+		case 'terms':
+			return true;
 		default:
 			return false;
 	}
