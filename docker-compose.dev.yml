@@ -1,0 +1,46 @@
+
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/app:/app
+      - ./shared:/app/shared
+      # - ./uploads:/uploads
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - net
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - FRONTEND_HOST=${FRONTEND_HOST_DEV}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - ACCESS_TOKEN_EXP_MIN=${ACCESS_TOKEN_EXP_MIN}
+      - JWT_SECRET=${JWT_SECRET}
+      - REFRESH_TOKEN_EXP_DAYS=${REFRESH_TOKEN_EXP_DAYS}
+      - CLIENT_ID=${CLIENT_ID}
+      - REDIRECT_URL=${REDIRECT_URL}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+    volumes:
+      - ./backend/app:/app
+      - ./backend/db:/db
+      - ./shared:/app/shared
+      # - ./uploads:/uploads
+      - /app/node_modules
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge

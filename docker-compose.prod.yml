@@ -51,3 +51,4 @@ networks:
 
 volumes:
   uploads:
+

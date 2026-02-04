@@ -1,18 +1,34 @@
 
 
-COMPOSE=docker-compose.yml
+COMPOSE_DEV=docker-compose.dev.yml
+COMPOSE_PROD=docker-compose.prod.yml
 
 
 all: down build up
 
+
+dev: down-dev build-dev up-dev
+
+build-dev:
+	docker compose -f ${COMPOSE_DEV}  build
+
+down-dev:
+	docker compose -f ${COMPOSE_DEV} down
+
+up-dev:
+	docker compose -f ${COMPOSE_DEV} up -d
+
+
+prod: down build up
+
 build:
-	docker compose -f ${COMPOSE} build
+	docker compose -f ${COMPOSE_PROD} build
 
 down:
-	docker compose -f ${COMPOSE} down
+	docker compose -f ${COMPOSE_PROD} down
 
 up:
-	docker compose -f ${COMPOSE} up -d
+	docker compose -f ${COMPOSE_PROD} up -d
 
 
 
