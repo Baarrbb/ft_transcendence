@@ -45,9 +45,115 @@ services:
     networks:
       - net
 
+## Monitoring
+
+  init-grafana:
+    build:
+      context: ./monitoring/init-grafana
+      dockerfile: Dockerfile
+    container_name: init-grafana
+    depends_on:
+      - grafana
+    environment:
+      - GF_USER_VIEWER=${GF_USER_VIEWER}
+      - GF_USER_VIEWER_PASSWORD=${GF_USER_VIEWER_PASSWORD}
+      - GF_USER_EDITOR=${GF_USER_EDITOR}
+      - GF_USER_EDITOR_PASSWORD=${GF_USER_EDITOR_PASSWORD}
+      - GRAFANA_HOST=${GRAFANA_HOST}
+      - GF_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    restart: no
+    networks:
+      - net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    expose:
+      - "3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_LOG_LEVEL=warn
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_PLUGIN_GRAFANA_IMAGE_RENDERER_RENDERING_IGNORE_HTTPS_ERRORS=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=${DASHBOARD_HOME_PATH}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - EDIT_DASHBOARDS=${EDIT_DASHBOARDS}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    expose:
+      - "9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.external-url=/prometheus"
+      - "--storage.tsdb.path=/prometheus"
+      # - '--web.route-prefix=/prometheus'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: cadvisor
+    expose:
+      - "8080"
+    privileged: true
+    command:
+      - "--docker_only=true"
+      - "--enable_metrics=memory,cpu,network,disk,tcp,udp"
+    volumes:
+      # - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      # - ${XDG_RUNTIME_DIR}:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      # - /home/${USER}/goinfre/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  node_exporter:
+    image: prom/node-exporter
+    container_name: node_exporter
+    expose:
+      - "9100"
+    restart: unless-stopped
+    networks:
+      - net
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter
+    container_name: nginx-exporter
+    expose:
+      - "9113"
+    command:
+      - --nginx.scrape-uri=${NGINX_EXPORTER_SCRAPE_URI}
+    depends_on:
+      - nginx
+    restart: unless-stopped
+    networks:
+      - net
+
 networks:
   net:
     driver: bridge
 
 volumes:
   uploads:
+  prometheus_data:

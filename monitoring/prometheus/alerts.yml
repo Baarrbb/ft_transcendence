@@ -1,0 +1,57 @@
+groups:
+- name: containers-alerts
+  interval: 30s
+  rules:
+
+  - alert: NodeExporterDown
+    expr: up{job="node-exporter"} == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Node Exporter down"
+      description: "Node exporter container is not reachable."
+
+  - alert: CadvisorDown
+    expr: up{job="cadvisor"} == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "cAdvisor down"
+      description: "cAdvisor container is not reachable."
+
+  - alert: HighContainerCPU
+    expr: 100 * rate(container_cpu_usage_seconds_total{name!=""}[1m]) > 80
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage for container {{ $labels.container }}"
+      description: "Container {{ $labels.container }} CPU usage is {{ $value }}% for more than 1 minute."
+
+  - alert: HighContainerMemory
+    expr: |
+      100 * container_memory_usage_bytes{name!=""}
+      /
+      scalar(node_memory_MemTotal_bytes)
+      > 80
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High Memory usage for container {{ $labels.container }}"
+      description: "Container {{ $labels.container }} uses more than 80% of its memory limit."
+
+  - alert: HighContainerSwap
+    expr: |
+      100 * container_memory_swap{name!=""}
+      /
+      container_spec_memory_limit_bytes{name!=""}
+      > 20
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High Swap usage for container {{ $labels.container }}"
+      description: "Container {{ $labels.container }} is using swap (>20%) for more than 1 minute."

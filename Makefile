@@ -1,11 +1,10 @@
 
 
 COMPOSE_DEV=docker-compose.dev.yml
-COMPOSE_PROD=docker-compose.prod.yml
+COMPOSE_PROD=docker-compose.yml
 
 
 all: down build up
-
 
 dev: down-dev build-dev up-dev
 
