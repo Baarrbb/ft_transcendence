@@ -41,12 +41,12 @@ services:
       - backend
     volumes:
       - uploads:/uploads:ro
+      # - elk_certs:/etc/ssl/certs_elk:ro
     restart: unless-stopped
     networks:
       - net
 
 ## Monitoring
-
   init-grafana:
     build:
       context: ./monitoring/init-grafana
@@ -150,6 +150,155 @@ services:
     networks:
       - net
 
+## Log management
+
+  # init-certs:
+  #   build: 
+  #     context: ./log_management/init-certs
+  #     dockerfile: Dockerfile
+  #   container_name: init-certs
+  #   volumes:
+  #     - elk_certs:/certs
+  #   restart: no
+
+  init-elasticsearch:
+    build:
+      context: ./log_management/init-elasticsearch
+      dockerfile: Dockerfile
+    container_name: init-elasticsearch
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTIC_HOST=${ELASTIC_HOST}
+      - ELASTIC_USER=${ELASTIC_USER}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_KIBANA_SYSTEM=${ELASTIC_KIBANA_SYSTEM}
+      - ELASTIC_KIBANA_SYSTEM_PASSWORD=${ELASTIC_KIBANA_SYSTEM_PASSWORD}
+      - ELASTIC_LOGSTASH_SYSTEM=${ELASTIC_LOGSTASH_SYSTEM}
+      - ELASTIC_LOGSTASH_SYSTEM_PASSWORD=${ELASTIC_LOGSTASH_SYSTEM_PASSWORD}
+      - ELASTIC_KIBANA_VIEWER=${ELASTIC_KIBANA_VIEWER}
+      - ELASTIC_KIBANA_VIEWER_PASSWORD=${ELASTIC_KIBANA_VIEWER_PASSWORD}
+      - ELASTIC_KIBANA_VIEWER_ROLE=${ELASTIC_KIBANA_VIEWER_ROLE}
+      - ELASTIC_KIBANA_ADMIN=${ELASTIC_KIBANA_ADMIN}
+      - ELASTIC_KIBANA_ADMIN_PASSWORD=${ELASTIC_KIBANA_ADMIN_PASSWORD}
+      - ELASTIC_KIBANA_ADMIN_ROLE=${ELASTIC_KIBANA_ADMIN_ROLE}
+      - ELASTIC_LOGSTASH_WRITER=${ELASTIC_LOGSTASH_WRITER}
+      - ELASTIC_LOGSTASH_WRITER_PASSWORD=${ELASTIC_LOGSTASH_WRITER_PASSWORD}
+      - ELASTIC_LOGSTASH_ROLE=${ELASTIC_LOGSTASH_ROLE}
+    # volumes:
+    #   - elk_certs:/certs:ro
+    restart: no
+    networks:
+      - net
+
+  elasticsearch:
+    image: elasticsearch:${ELK_VERSION}
+    container_name: elasticsearch
+    expose:
+      - "9200"
+    environment:
+      - discovery.type=single-node
+      - node.name=elasticsearch
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      # - xpack.security.http.ssl.enabled=true
+      # - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic.crt
+      # - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elastic.key
+      # - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+    # depends_on:
+    #   - init-certs
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      # - elk_certs:/usr/share/elasticsearch/config/certs:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  logstash:
+    image: logstash:${ELK_VERSION}
+    container_name: logstash
+    expose:
+      - "5044"
+    environment:
+      - ELK_VERSION=${ELK_VERSION}
+      - xpack.monitoring.enabled=true
+      # - config.reload.automatic=true # pour dev pipeline logstash
+      # - config.reload.interval=3s # pour dev pipeline logstash
+
+      - ELASTIC_HOST=${ELASTIC_HOST}
+      - ELASTIC_USERNAME=${ELASTIC_LOGSTASH_WRITER}
+      - ELASTIC_PASSWORD=${ELASTIC_LOGSTASH_WRITER_PASSWORD}
+    volumes:
+      - ./log_management/logstash/pipeline:/usr/share/logstash/pipeline
+      # - elk_certs:/usr/share/logstash/config/certs:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  init-kibana-dashboard:
+    build:
+      context: ./log_management/init-kibana-dashboard
+      dockerfile: Dockerfile
+    container_name: init-kibana-dashboard
+    depends_on: 
+      - kibana
+    environment:
+      - ELASTIC_USER=${ELASTIC_USER}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_HOST=${KIBANA_HOST}
+    # volumes:
+    #   - elk_certs:/certs:ro
+    restart: no
+    networks:
+      - net
+
+  kibana:
+    # image: kibana:${ELK_VERSION}
+    build:
+      context: ./log_management/kibana
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    container_name: kibana
+    expose:
+      - "5601"
+    depends_on:
+      - elasticsearch
+      - init-elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTIC_HOST}
+      - ELASTICSEARCH_USERNAME=${ELASTIC_KIBANA_SYSTEM}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_KIBANA_SYSTEM_PASSWORD}
+      - SERVER_REVERSE_PROXY=true
+      # - SERVER_SSL_ENABLED=true
+      # - SERVER_SSL_KEY=/usr/share/kibana/config/certs/elastic.key
+      # - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/elastic.crt
+      # - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
+      # - XPACK_FLEET_ENABLED=false
+    # volumes:
+    #   - elk_certs:/usr/share/kibana/config/certs:ro
+    restart: unless-stopped
+    networks:
+      - net
+
+  filebeat:
+    image: elastic/filebeat:${ELK_VERSION}
+    container_name: filebeat
+    depends_on:
+      - logstash
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # - /home/${USER}/goinfre/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
+      - ./log_management/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # - elk_certs:/usr/share/filebeat/certs:ro
+    restart: unless-stopped
+    networks:
+      - net
+
 networks:
   net:
     driver: bridge
@@ -157,3 +306,5 @@ networks:
 volumes:
   uploads:
   prometheus_data:
+  elasticsearch_data:
+  # elk_certs:

@@ -1,0 +1,42 @@
+
+filebeat.inputs:
+  - type: filestream
+    id: my-containers-logs
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    parsers:
+      - container:
+          stream: all
+          format: auto
+    processors:
+      - add_docker_metadata: ~
+      - rename:
+          fields:
+            - from: "container.name"
+              to: "service"
+
+processors:
+  - include_fields:
+      fields: ["message", "service", "@timestamp", "stream", "event"]
+  - drop_fields:
+      fields: ["log", "ecs", "@version", "host", "tags", "container", "agent", "input"]
+  - drop_event:
+      when:
+        not:
+          or:
+            - equals:
+                service: "nginx"
+            - equals:
+                service: "backend"
+
+output.logstash:
+  hosts: ["logstash:5044"]
+  # ssl.certificate_authorities: ["/usr/share/filebeat/certs/elastic.crt"]
+
+setup.kibana:
+  host: "kibana:5601"
+
+# a rm
+logging.level: warning
+logging.to_files: false
