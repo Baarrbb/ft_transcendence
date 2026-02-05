@@ -1,4 +1,6 @@
-FROM kibana:9.2.3
+
+ARG ELK_VERSION
+FROM kibana:${ELK_VERSION}
 
 COPY ./tool/init.sh /usr/local/bin/init.sh
 

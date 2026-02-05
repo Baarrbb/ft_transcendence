@@ -205,7 +205,6 @@ services:
       - xpack.monitoring.enabled=true
       # - config.reload.automatic=true # pour dev pipeline logstash
       # - config.reload.interval=3s # pour dev pipeline logstash
-
       - ELASTIC_HOST=${ELASTIC_HOST}
       - ELASTIC_USERNAME=${ELASTIC_LOGSTASH_WRITER}
       - ELASTIC_PASSWORD=${ELASTIC_LOGSTASH_WRITER_PASSWORD}
@@ -264,7 +263,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
       - ./log_management/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      # - elk_certs:/usr/share/filebeat/certs:ro
     restart: unless-stopped
     networks:
       - net

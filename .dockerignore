@@ -1,0 +1,8 @@
+*
+!frontend/app/**
+!backend/app/**
+!shared/**
+!nginx/**
+!docker-compose.prod.yml
+!backend/Dockerfile.prod
+!nginx/Dockerfile
