@@ -1,3 +1,9 @@
+// ===== CHAT ROOM =====
+// Ce fichier gere l'affichage d'une conversation avec un ami :
+// - Le header (nom + status online + indicateur de frappe)
+// - L'historique des messages
+// - Les invitations de jeu dans le chat
+// - L'envoi/reception de messages via websocket
 
 import type { UserGameState, InvitationStatus } from '@shared/types/users.ts'
 import type { MessageData, ChannelInfo, ChatHistory } from '@shared/types/chat.ts'
@@ -12,7 +18,7 @@ import { getSocketUser } from '../../socket.ts';
 import { updateInviteMessage, updateGameStatus, renderInviteGameMessageFormat } from './renderGameInviteInChat.ts'
 import { setupListenersChat } from './listeners.ts';
 
-
+// Configure le header de la conversation (nom, status, bouton retour sur mobile)
 async function setChatHeaderAndInput(username: string, online: boolean) {
 	try {
 		const backBtn = document.getElementById('back-header-btn');
@@ -69,6 +75,11 @@ async function setChatHeaderAndInput(username: string, online: boolean) {
 	}
 }
 
+// Fonction principale : ouvre la conversation avec un ami
+// 1) Surligne l'ami dans la sidebar
+// 2) Configure le header
+// 3) Gere le statut d'invitation de jeu
+// 4) Charge l'historique des messages
 export async function populateChatWithFriend(username: string | null) {
 	if (!username)
 		return;
@@ -131,6 +142,8 @@ export async function populateChatWithFriend(username: string | null) {
 	setupGameBtnListener();
 }
 
+// Genere le HTML d'un seul message (aligne a gauche si c'est l'autre, a droite si c'est moi)
+// Affiche aussi la date et le statut lu/envoye
 export function renderOneMessage(msgData: MessageData, notMe: boolean): string {
 	const date = formatDateToLocal(msgData.date)
 	return /*ts*/`
@@ -151,6 +164,8 @@ export function renderOneMessage(msgData: MessageData, notMe: boolean): string {
 	`;
 }
 
+// Charge l'historique des messages d'un channel et les affiche
+// Rejoint aussi le channel via websocket pour recevoir les nouveaux messages en temps reel
 async function populateChatHistory(channelId: number, username: string) {
 	if (!channelId)
 		return;

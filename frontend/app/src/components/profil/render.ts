@@ -1,3 +1,8 @@
+// ===== PROFIL RENDER =====
+// Ce fichier gere tout l'affichage de la page Profil :
+// - La carte utilisateur (avatar, username, email, stats rapides)
+// - La carte stats (graphique ELO, streaks, wins/losses)
+// - L'historique des matchs
 
 import type { UserResponse } from '@shared/types/users.ts';
 import { usersService } from '../../services/users.ts';
@@ -7,6 +12,7 @@ import { formatDateToLocal } from '../../utils/formatDate.ts'
 import { setupProfilListeners } from './listeners.ts'
 import ApexCharts from "apexcharts";
 
+// Genere le HTML de la carte utilisateur (avatar + username + email + stats rapides)
 function renderUserCard(): string {
 	return /*ts*/`
 		<div class="flex flex-col flex-1 min-h-0 text-[#d4ced4] w-full max-w-[400px] bg-[#02010f]/80 backdrop-blur-sm border border-[var(--color-primary)] rounded-2xl shadow-xl">
@@ -95,6 +101,7 @@ function renderUserCard(): string {
 	`;
 }
 
+// Genere le HTML de la carte statistiques (graphique ELO + streaks + wins/losses)
 export function renderStatsCard(): string {
 	return /*ts*/`
 		<div class="flex flex-col flex-1 min-h-0 text-[#d4ced4] w-full max-w-[400px] bg-[#02010f]/80 backdrop-blur-sm border border-[var(--color-primary)] rounded-2xl shadow-xl">
@@ -146,6 +153,7 @@ export function renderStatsCard(): string {
 	`;
 }
 
+// Genere le HTML de la carte historique des matchs (liste scrollable)
 function renderMatchHistoryCard(): string {
 	return /*ts*/`
 		<div class="flex flex-col flex-1 min-h-0 text-[#d4ced4] w-full max-w-[400px] bg-[#02010f]/80 backdrop-blur-sm border border-[var(--color-primary)] rounded-2xl shadow-xl">
@@ -169,6 +177,7 @@ function renderMatchHistoryCard(): string {
 	`;
 }
 
+// Fonction principale : assemble les 3 cartes (user, stats, match history) dans la page profil
 export function renderProfil(): string {
 	return /*ts*/`
 		<div id="profil-loader" class="flex justify-center items-center h-full">
@@ -200,10 +209,13 @@ export function renderProfil(): string {
 }
 
 
+// Calcule les series de victoires : la serie actuelle et la meilleure serie
+// Parcourt l'historique des matchs pour compter les wins consecutifs
 function computeStreaks(history: any[]) {
-	let currentStreak = 0;
-	let bestStreak = 0;
+	let currentStreak = 0;  // serie en cours (depuis le dernier match)
+	let bestStreak = 0;     // meilleure serie de tous les temps
 
+	// Serie actuelle : on compte depuis le debut tant qu'on gagne
 	for (let i = 0; i < history.length; i++) {
 		if (history[i].meWinner)
 			currentStreak++;
@@ -225,6 +237,7 @@ function computeStreaks(history: any[]) {
 	return { currentStreak, bestStreak };
 }
 
+// Remplit la carte utilisateur avec le nombre total de parties et le winrate
 function fillBoxPlayer(totalGames: number, wins: number) {
 	const total = document.getElementById('total-games');
 	if (total)
@@ -253,6 +266,7 @@ function fillBoxPlayer(totalGames: number, wins: number) {
 	}
 }
 
+// Remplit la carte stats avec wins, losses, streaks et debloque les achievements
 export function fillBoxStats(totalGames: number, wins: number, history: any) {
 	const totalWins = document.getElementById('total-wins');
 	if (totalWins)
@@ -273,8 +287,10 @@ export function fillBoxStats(totalGames: number, wins: number, history: any) {
 	updateAchievements(totalGames, wins, bestStreak);
 }
 
+// Reference au graphique actuel (pour le detruire avant d'en creer un nouveau)
 let currentChart: ApexCharts | null = null;
 
+// Affiche le graphique d'evolution ELO avec la librairie ApexCharts
 export function populateGraph(totalGames: number, evolution: any) {
 	if (totalGames > 0) {
 		const graphDiv = document.getElementById('stat-graph');
@@ -341,7 +357,7 @@ export function populateGraph(totalGames: number, evolution: any) {
 	}
 }
 
-// voir si Yanis prefere card tte meme fond ou green/red (rm match.meWinner bg- border-)
+// Genere le HTML pour un seul match dans l'historique (vert si win, rouge si loss)
 function renderOneMatchHistory(match: any): string {
 	return /*ts*/`
 		<div class="flex items-center justify-between p-3 bg-[#1a0c24]/50 rounded-lg border border-[var(--color-primary)]/20
@@ -374,6 +390,8 @@ function renderOneMatchHistory(match: any): string {
 }
 
 
+// Debloque les badges/achievements selon les stats du joueur
+// First Win = 1 victoire, On Fire = 5 wins d'affilee, Veteran = 50 parties, Addicted = 100 parties
 function updateAchievements( totalGames: number, wins: number, bestStreak: number) {
 	const unlock = (id: string) => {
 		const el = document.getElementById(id);
@@ -396,6 +414,10 @@ function updateAchievements( totalGames: number, wins: number, bestStreak: numbe
 		unlock('ach-top-50');
 }
 
+// Fonction principale qui charge toutes les donnees du profil depuis l'API
+// 1) Recupere les infos user (username, email, avatar)
+// 2) Recupere l'historique des matchs et calcule les stats
+// 3) Affiche le graphique ELO et met en place les listeners
 export async function populateProfil() {
 	try {
 		const response: UserResponse = await usersService.userInfo();

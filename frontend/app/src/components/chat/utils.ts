@@ -1,5 +1,7 @@
+// ===== CHAT UTILS =====
+// Fonctions utilitaires pour le chat
 
-
+// Surligne l'ami selectionne dans la sidebar (enleve la surbrillance des autres)
 export function highlightFriend(username: string | null) {
 	const friendsList = document.getElementById('chat-friends-list');
 	if (!friendsList)
@@ -17,6 +19,7 @@ export function highlightFriend(username: string | null) {
 	}
 }
 
+// Convertit une date de la BDD en format lisible local (fr-FR : JJ/MM/AAAA HH:MM:SS)
 export function formatDateToLocal(dateDB: string | number): string {
 	let date: Date;
 	if (typeof dateDB === 'number')

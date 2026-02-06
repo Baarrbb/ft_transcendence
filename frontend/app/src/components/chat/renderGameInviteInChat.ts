@@ -1,11 +1,13 @@
-
+// ===== INVITATIONS DE JEU DANS LE CHAT =====
+// Ce fichier gere l'affichage des invitations de jeu directement dans le chat
+// (envoyee, recue, acceptee, en jeu) avec les boutons d'action correspondants
 
 import { formatDateToLocal } from './utils.ts';
 import { renderButtonGame, renderInGameButton } from '../invite/buttons.ts';
 import { stringToElement } from '../utils.ts';
 import type { UserGameState, InvitationStatus } from '@shared/types/users.ts'
 
-
+// Bouton "Annuler" quand j'ai envoye une invitation
 function renderSentInviteMessage(username: string): string {
 	return /*ts*/`
 		<button data-action="cancel" data-username="${username}"
@@ -15,6 +17,7 @@ function renderSentInviteMessage(username: string): string {
 	`;
 }
 
+// Bouton "Rejoindre" quand l'invitation est acceptee (avec countdown)
 function renderInviteAcceptedMessage(username: string, matchId: string | undefined): string {
 	return /*ts*/`
 		<button data-match="${matchId}" data-action='join' data-username="${username}"
@@ -25,6 +28,7 @@ function renderInviteAcceptedMessage(username: string, matchId: string | undefin
 	`;
 }
 
+// Boutons "Accepter" et "Refuser" quand on recoit une invitation
 function renderReceivedInviteMessage(username: string): string {
 	return /*ts*/`
 		<div class="flex gap-2">
@@ -46,6 +50,8 @@ function getInviteTitle(sentByMe: boolean, username: string): string {
 	: `<span class="font-semibold text-[var(--color-primary-light)]">${username}</span> invites you to play`;
 }
 
+// Genere le message complet d'invitation de jeu dans le chat
+// Choisit le bon bouton selon le statut (sent/received/accepted/occupied)
 export function renderInviteGameMessageFormat(sentByMe: boolean, username: string, status: InvitationStatus, matchId: string | undefined, date: string | number): string {
 	const dateFmt = formatDateToLocal(date);
 
@@ -96,8 +102,9 @@ export function renderInviteGameMessageFormat(sentByMe: boolean, username: strin
 	`;
 }
 
+// Met a jour le message d'invitation dans le chat quand le statut change
+// (ex: invitation envoyee -> acceptee -> en jeu)
 export function updateInviteMessage(user: UserGameState) {
-
 	const divUser = document.getElementById('general-div')?.getAttribute('data-username');
 	if (divUser !== user.username)
 		return;
@@ -134,6 +141,7 @@ export function updateInviteMessage(user: UserGameState) {
 	}
 }
 
+// Met a jour le bouton de jeu dans le header du chat selon le statut d'invitation
 export function updateGameStatus(user: UserGameState) {
 	const chatHeaderUser = document.getElementById('chat-header')?.getAttribute('data-username');
 	if (chatHeaderUser !== user.username)
