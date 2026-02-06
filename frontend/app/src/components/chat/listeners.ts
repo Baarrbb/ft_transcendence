@@ -1,3 +1,9 @@
+// ===== CHAT LISTENERS =====
+// Ce fichier gere toutes les interactions utilisateur dans le chat :
+// - Clic sur un ami pour ouvrir la conversation
+// - Envoi de message (bouton ou touche Entree)
+// - Indicateur "est en train d'ecrire"
+// - Boutons d'invitation de jeu (inviter, accepter, refuser, rejoindre)
 
 import { getSocketUser } from '../../socket.ts';
 import { populateChatWithFriend } from './renderChatRoom.ts';
@@ -9,9 +15,11 @@ import { navigateTo } from '../../main.ts';
 
 let onFriendClick: ((e: Event) => void) | null = null;
 
+// Listener sur la liste d'amis : quand on clique sur un ami, on ouvre sa conversation
 export async function setupListenersChatFriends() {
 	const friendsList = document.getElementById('chat-friends-list') as HTMLElement;
 
+	// On enleve l'ancien listener avant d'en mettre un nouveau (evite les doublons)
 	if (onFriendClick)
 		friendsList?.removeEventListener('click', onFriendClick);
 
@@ -25,6 +33,7 @@ export async function setupListenersChatFriends() {
 		const div = document.getElementById('general-div');
 		if (!div)
 			return;
+		// Si on etait dans un channel, on envoie un "leave" au serveur via websocket
 		const channelId = div.getAttribute('data-channel');
 		if (channelId) {
 			const socket = getSocketUser();
@@ -33,7 +42,7 @@ export async function setupListenersChatFriends() {
 				channelId: Number(channelId),
 			}));
 		}
-		await populateChatWithFriend(username);
+		await populateChatWithFriend(username); // ouvre la conversation
 	}
 
 	friendsList?.addEventListener('click', onFriendClick);
@@ -41,6 +50,8 @@ export async function setupListenersChatFriends() {
 
 let onConnectedUserClick: ((e: Event) => void) | null = null;
 
+// Listener sur la liste des utilisateurs connectes (page hub)
+// Clic sur un connecte = ouvre la conversation avec lui
 export async function setupListernersConnectedUsers() {
 	const connectedList = document.getElementById('general-div');
 	if (!connectedList)
@@ -68,6 +79,10 @@ let onUserClick: (() => void) | null = null;
 let onChatTyping: (() => void) | null = null;
 let typingTimeout: number | null = null;
 
+// Met en place les listeners pour une conversation specifique :
+// - Envoyer un message (clic ou Entree)
+// - Indicateur de frappe (typing)
+// - Clic sur le username dans le header = affiche ses stats
 export async function setupListenersChat(channelId: number, username: string) {
 	const chatInput = document.getElementById('chat-input') as HTMLInputElement;
 	const sendBtn = document.getElementById('send-message') as HTMLButtonElement;
@@ -85,6 +100,7 @@ export async function setupListenersChat(channelId: number, username: string) {
 	if (onChatTyping)
 		chatInput?.removeEventListener('input', onChatTyping);
 
+	// Envoi de message : envoie via websocket et vide le champ
 	onChatSend = () => {
 		const socket = getSocketUser();
 		if (!chatInput?.value)
@@ -96,11 +112,12 @@ export async function setupListenersChat(channelId: number, username: string) {
 			channelId: channelId,
 			battle: false
 		}));
-		chatInput.value = '';
+		chatInput.value = ''; // vide le champ apres envoi
 		refreshFriendsListOnAction();
 	}
 	sendBtn?.addEventListener('click', onChatSend);
 
+	// Touche Entree = envoie le message
 	onChatKeydown = (e: KeyboardEvent) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
@@ -110,6 +127,8 @@ export async function setupListenersChat(channelId: number, username: string) {
 	}
 	chatInput?.addEventListener('keydown', onChatKeydown);
 
+	// Indicateur de frappe : previent l'autre qu'on est en train d'ecrire
+	// Envoie typing:start, puis typing:stop apres 1.5s d'inactivite
 	onChatTyping = () => {
 		const socket = getSocketUser();
 		// if (!chatInput?.value)
@@ -134,11 +153,14 @@ export async function setupListenersChat(channelId: number, username: string) {
 	}
 	chatInput?.addEventListener('input', onChatTyping);
 
+	// Clic sur le username dans le header = popup avec ses stats
 	onUserClick = async () => { await showUserStats(username) }
 	chatHeader?.addEventListener('click', onUserClick);
 }
 
 
+// Gere le clic sur les boutons d'invitation de jeu dans le chat
+// Detecte l'action (invite, cancel, decline, accept, join) et appelle la bonne fonction
 async function handleClick(e: Event) {
 	const target = e.target as HTMLElement;
 	// let realTarget = target;
@@ -159,6 +181,7 @@ async function handleClick(e: Event) {
 	await actionClick(username, action, matchId);
 }
 
+// Execute l'action d'invitation selon le bouton clique
 async function actionClick(username: string, action: string | null, matchId: string | null) {
 	if (!action)
 		return;
@@ -191,6 +214,7 @@ async function actionClick(username: string, action: string | null, matchId: str
 let onHeaderBtnClick: ((e: Event) => void) | null = null;
 let onMessageBtnClick: ((e: Event) => void) | null = null;
 
+// Listeners pour les boutons de jeu (header + messages d'invitation dans le chat)
 export function setupGameBtnListener() {
 	const btn = document.getElementById('header-btn');
 	if (!btn)

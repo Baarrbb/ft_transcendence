@@ -1,3 +1,9 @@
+// ===== CHAT RENDER =====
+// Ce fichier gere l'affichage principal du chat :
+// - La page chat avec la liste des amis a gauche et la conversation a droite
+// - Le rendu de chaque ami dans la sidebar
+// - Le chargement des donnees (liste d'amis, conversation)
+// - La gestion mobile (affiche soit les amis soit le chat, pas les deux)
 
 import type { UsersListResponse, UsersInfo } from '@shared/types/users.ts'
 import { friendsService } from '../../services/friends.ts';
@@ -9,12 +15,13 @@ import { populateChatWithFriend } from './renderChatRoom.ts';
 
 type MobileChatView = 'friends' | 'chat';
 
-// let mobileChatView: MobileChatView = 'friends';
-
+// Detecte si on est en mode mobile (ecran < 1024px)
 export function isMobile() {
 	return window.innerWidth < 1024;
 }
 
+// En mobile, on switch entre la vue "liste d'amis" et la vue "conversation"
+// Car l'ecran est trop petit pour afficher les deux en meme temps
 export function setMobileChatView(view: MobileChatView) {
 // 	mobileChatView = view;
 
@@ -35,7 +42,7 @@ export function setMobileChatView(view: MobileChatView) {
 	}
 }
 
-
+// Genere le HTML principal de la page chat (titre + carte chat)
 export function renderChat(): string {
 	return /*ts*/`
 		<div id="profil-content" class='h-full'>
@@ -55,6 +62,7 @@ export function renderChat(): string {
 	`;
 }
 
+// Genere la carte chat : sidebar amis a gauche + zone de conversation a droite
 function renderChatCard(): string {
 	return /*ts*/`
 		<div class="flex items-stretch w-full h-[80vh] lg:h-[80vh] bg-transparent rounded-2xl shadow-2xl border border-[var(--color-primary)] overflow-hidden min-w-0">
@@ -104,6 +112,7 @@ function renderChatCard(): string {
 	`;
 }
 
+// Genere le HTML d'un ami dans la sidebar (avatar + nom + statut online/offline)
 function renderOneFriend(user: UsersInfo): string {
 	return /*ts*/ `
 		<li data-username="${user.username}" data-anon="${user.is_anon}"
@@ -125,7 +134,7 @@ function renderOneFriend(user: UsersInfo): string {
 	`;
 }
 
-// populate chat hub
+// Point d'entree : charge la liste d'amis et affiche les connectes (ou vue mobile)
 export async function populateChat() {
 	await populateChatFriends();
 	if (isMobile())
@@ -134,7 +143,7 @@ export async function populateChat() {
 		await populateConnectedUsers();
 }
 
-// populate friends list
+// Charge la liste des amis depuis l'API et l'affiche dans la sidebar
 export async function populateChatFriends() {
 	try {
 		const response: UsersListResponse = await friendsService.getFriends("message", "");
@@ -151,6 +160,7 @@ export async function populateChatFriends() {
 	}
 }
 
+// Rafraichit la liste d'amis (apres un block, unfriend, etc.) tout en gardant le chat actif
 export async function refreshFriendsListOnAction() {
 	const list = document.getElementById('chat-friends-list');
 	if (!list)
@@ -164,7 +174,7 @@ export async function refreshFriendsListOnAction() {
 		highlightFriend(currentChat);
 }
 
-// populate chat room
+// Ouvre directement la conversation avec un ami precis
 export async function populateOneChat(username: string | undefined) {
 	if (!username)
 		return;

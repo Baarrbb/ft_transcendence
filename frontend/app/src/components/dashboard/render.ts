@@ -1,3 +1,7 @@
+// ===== DASHBOARD RENDER =====
+// Ce fichier gere l'affichage du dashboard (classement des joueurs)
+// Il affiche 2 listes : le classement global et le classement entre amis
+// Chaque joueur est affiche avec son rang, avatar, username et ELO
 
 import type { UsersListResponse, UsersInfo } from '@shared/types/users.ts'
 import { renderView, populateList } from '../commonLayout.ts';
@@ -6,10 +10,14 @@ import { friendsService } from '../../services/friends.ts';
 import { catchHttpError } from '../../utils/catchError.ts';
 import { setupDashboardListeners } from './listeners.ts';
 
+// Genere le HTML du dashboard (2 colonnes : Global et Friends)
+// Utilise le layout commun avec renderView
 export function renderDashboard(): string {
 	return renderView('dashboard', 'Global', 'Friends', 'global-list', 'friends-list');
 }
 
+// Genere le HTML d'un joueur dans le classement (rang + avatar + nom + ELO)
+// Si c'est moi, la ligne est surlignee
 export function renderOneUser(user: UsersInfo, i: number): string {
 	return /*ts*/`
 		<li class="user-item flex justify-between items-center p-2 border-b border-[var(--color-primary)] text-[#d4ced4] ${user.me ? 'bg-[var(--color-primary-bg)] ring-2 ring-[var(--color-primary-light)]' : ''}">
@@ -32,6 +40,10 @@ export function renderOneUser(user: UsersInfo, i: number): string {
 	`;
 }
 
+// Charge les donnees du dashboard depuis l'API :
+// 1) Top 50 joueurs globaux tries par ELO
+// 2) Amis tries par ELO
+// Puis met en place les listeners (clic sur un joueur = voir ses stats)
 export async function populateDashboard() {
 	try {
 		const response: UsersListResponse = await usersService.getUsersFilters("elo", "50");
