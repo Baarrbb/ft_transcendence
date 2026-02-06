@@ -223,7 +223,7 @@ function startMatch(matchId: string, username: string) {
 	match.countdown = true;
 	let countdown = 3;
 	const interval = setInterval(() => {
-		if (countdown >= 0) {
+		if (countdown > 0) {
 			broadcastMatchState(matchId, {
 				type: 'game:countdown',
 				seconds: countdown,

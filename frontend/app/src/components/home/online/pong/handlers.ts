@@ -127,6 +127,13 @@ function handleGameUpdate(data: any) {
 	if (data.match.matchId !== getCurrentMatchId())
 		return;
 
+	if (data.match.running) {
+		const overlay = document.getElementById('pong-overlay');
+		if (!overlay)
+			return;
+		overlay.style.display = 'none';
+	}
+
 	const canvas = document.getElementById('pong-canvas') as HTMLCanvasElement;
 	if (!canvas)
 		return;
