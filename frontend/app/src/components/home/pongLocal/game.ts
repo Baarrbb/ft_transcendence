@@ -306,9 +306,9 @@ function paddlesMove(game: LocalGame) {
 	if (!canvas)
 		return;
 	if (game.paddles.right.upPressed)
-		game.paddles.right.pos_y = Math.max(game.paddles.right.pos_y - canvas.height / 90, 0)
+		game.paddles.right.pos_y = Math.max(game.paddles.right.pos_y - canvas.height / 100, 0)
 	else if (game.paddles.right.downPressed)
-		game.paddles.right.pos_y = Math.min(game.paddles.right.pos_y + canvas.height / 90, canvas.height - game.paddles.right.height)
+		game.paddles.right.pos_y = Math.min(game.paddles.right.pos_y + canvas.height / 100, canvas.height - game.paddles.right.height)
 
 	if (game.paddles.left.upPressed)
 		game.paddles.left.pos_y = Math.max(game.paddles.left.pos_y - canvas.height / 100, 0)
