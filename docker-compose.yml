@@ -115,13 +115,13 @@ services:
       - "--docker_only=true"
       - "--enable_metrics=memory,cpu,network,disk,tcp,udp"
     volumes:
-      # - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
+      - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      # - ${XDG_RUNTIME_DIR}:/var/run:ro
+      # - /var/run:/var/run:ro
+      - ${XDG_RUNTIME_DIR}:/var/run:ro
       - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      # - /home/${USER}/goinfre/docker/:/var/lib/docker:ro
+      # - /var/lib/docker/:/var/lib/docker:ro
+      - /home/${USER}/goinfre/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     restart: unless-stopped
     networks:
@@ -258,10 +258,10 @@ services:
       - logstash
     user: root
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      # - /home/${USER}/goinfre/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
+      # - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /home/${USER}/goinfre/docker/containers:/var/lib/docker/containers:ro
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${XDG_RUNTIME_DIR}/docker.sock:/var/run/docker.sock:ro
       - ./log_management/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
     restart: unless-stopped
     networks:
